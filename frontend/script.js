@@ -153,11 +153,11 @@ function adjustGaugeSize() {
   if (!svg) return;
 
   if (responsiveState.isMobile) {
-    svg.setAttribute('width', '200');
-    svg.setAttribute('height', '120');
+    svg.setAttribute('width', '260');
+    svg.setAttribute('height', '150');
   } else if (responsiveState.isTablet) {
-    svg.setAttribute('width', '240');
-    svg.setAttribute('height', '140');
+    svg.setAttribute('width', '280');
+    svg.setAttribute('height', '160');
   } else {
     svg.setAttribute('width', '280');
     svg.setAttribute('height', '160');
@@ -1416,8 +1416,8 @@ function initGauge() {
 
   // Adjust gauge size based on responsive state
   const cx = width / 2;
-  const cy = height - 40;
-  const r = Math.min(cx, cy) - 10;
+  const cy = height - 34;
+  const r = Math.min(width * 0.38, cy - 18);
 
   function arc(start, end) {
     const s = { x: cx + r * Math.cos(start * Math.PI / 180), y: cy + r * Math.sin(start * Math.PI / 180) };
@@ -1450,8 +1450,8 @@ function updateGauge() {
   const height = parseInt(svg.getAttribute('height'));
 
   const cx = width / 2;
-  const cy = height - 40;
-  const r = Math.min(cx, cy) - 40;
+  const cy = height - 34;
+  const r = Math.min(width * 0.38, cy - 18) - 16;
 
   const angle = (state.riskScore / 100) * 180 - 180;
   const rad = angle * Math.PI / 180;
