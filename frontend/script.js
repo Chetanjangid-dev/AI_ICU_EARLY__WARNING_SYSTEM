@@ -1871,8 +1871,12 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-  event.target.classList.add('active');
-  document.getElementById('tab-' + tab).classList.add('active');
+  const tabButton = Array.from(document.querySelectorAll('.tab-btn'))
+    .find(btn => (btn.getAttribute('onclick') || '').includes(`'${tab}'`));
+  if (tabButton) tabButton.classList.add('active');
+
+  const tabContent = document.getElementById('tab-' + tab);
+  if (tabContent) tabContent.classList.add('active');
 }
 
 async function applyManualInputs() {

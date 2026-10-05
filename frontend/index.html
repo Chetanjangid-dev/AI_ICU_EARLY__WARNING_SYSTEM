@@ -240,9 +240,9 @@
             <span>🔔</span>
             <span>Notifications</span>
           </button>
-          <button class="control-btn" onclick="testBackendConnection()">
-            <span>🔄</span>
-            <span>Test Backend</span>
+          <button class="control-btn" onclick="switchTab('manual')">
+            <span>📝</span>
+            <span>Manual Input</span>
           </button>
         </div>
 
@@ -250,6 +250,7 @@
         <div class="tabs-header">
           <button class="tab-btn active" onclick="switchTab('monitor')">Monitor</button>
           <button class="tab-btn" onclick="switchTab('history')">History</button>
+          <button class="tab-btn" onclick="switchTab('manual')">Manual Input</button>
           <button class="tab-btn" onclick="switchTab('meds')">Meds</button>
           <button class="tab-btn" onclick="switchTab('vent')">Vent</button>
           <button class="tab-btn" onclick="switchTab('notes')">Notes</button>
@@ -328,8 +329,8 @@
           </div>
         </div>
 
-        <!-- History Tab -->
-        <div id="tab-history" class="tab-content">
+        <!-- Manual Input Tab -->
+        <div id="tab-manual" class="tab-content">
           <div class="input-panel manual-prediction-panel">
             <div class="manual-panel-header">
               <div>
@@ -463,9 +464,13 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="tab-history" class="tab-content">
           <div class="panel history-trends-panel">
             <div class="panel-title">Vital Trends</div>
-            <canvas id="historyChart" height="160"></canvas>
+            <canvas id="historyChart" height="200"></canvas>
           </div>
         </div>
 
