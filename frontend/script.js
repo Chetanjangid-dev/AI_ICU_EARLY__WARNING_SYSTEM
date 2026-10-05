@@ -1,7 +1,8 @@
 // ========== STARTUP / RENDER WAKE MANAGEMENT ==========
 const BACKEND_URL = 'https://ai-icu-backend.onrender.com';
-const STARTUP_RETRY_MS = 5000;
-const STARTUP_TIMEOUT_MS = 9000;
+const API_BASE_URL = '';
+const STARTUP_RETRY_DELAYS_MS = [3000, 5000, 8000, 13000, 21000, 30000];
+const STARTUP_TIMEOUT_MS = 25000;
 
 let startupAttempts = 0;
 let appStarted = false;
@@ -11,7 +12,7 @@ async function pingBackend() {
   const timeout = setTimeout(() => controller.abort(), STARTUP_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`${BACKEND_URL}/health`, {
+    const response = await fetch(`${API_BASE_URL}/api/health`, {
       method: 'GET',
       cache: 'no-store',
       signal: controller.signal
@@ -30,10 +31,11 @@ function updateStartupGate(message) {
   const status = document.getElementById('startupStatusText');
   const body = document.getElementById('startupMessage');
 
+  const nextDelay = STARTUP_RETRY_DELAYS_MS[Math.min(startupAttempts, STARTUP_RETRY_DELAYS_MS.length - 1)] / 1000;
   if (attempt) attempt.textContent = `Wake check ${startupAttempts}`;
   if (status) status.textContent = message;
   if (body) {
-    body.textContent = 'Render free services can sleep after inactivity. We are waking the backend now, then the live monitor will open automatically.';
+    body.textContent = `Render free services can sleep after inactivity. We are waking the backend on a controlled schedule. Next check runs automatically in about ${nextDelay} seconds.`;
   }
 }
 
@@ -56,7 +58,8 @@ async function waitForBackendAndStart() {
   const ready = await pingBackend();
   if (!ready) {
     updateStartupGate('Backend is waking up. Retrying automatically...');
-    window.setTimeout(waitForBackendAndStart, STARTUP_RETRY_MS);
+    const retryDelay = STARTUP_RETRY_DELAYS_MS[Math.min(startupAttempts - 1, STARTUP_RETRY_DELAYS_MS.length - 1)];
+    window.setTimeout(waitForBackendAndStart, retryDelay);
     return;
   }
 
@@ -172,7 +175,7 @@ let state = {
   alertDismissed: false,
   activeTab: 'monitor',
   activePatientId: 'ICU-2024-0841',
-  backendUrl: BACKEND_URL,
+  backendUrl: API_BASE_URL,
   vitals: {
     heartRate: 78,
     spO2: 97,
@@ -549,7 +552,7 @@ function resizeCanvases() {
 // ========== BACKEND CONNECTION ==========
 async function checkBackendConnection() {
   try {
-    const response = await fetch(`${state.backendUrl}/health`, {
+    const response = await fetch(`${state.backendUrl}/api/health`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -618,7 +621,7 @@ async function getMLPrediction(patientId = state.activePatientId) {
   };
 
   try {
-    const response = await fetch(`${state.backendUrl}/predict`, {
+    const response = await fetch(`${state.backendUrl}/api/predict`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1993,9 +1996,5 @@ function updateClock() {
 // ========== INITIALIZE EVERYTHING ==========
 window.addEventListener('resize', handleResize);
 document.addEventListener('DOMContentLoaded', () => {
-  const retryButton = document.getElementById('startupRetryBtn');
-  if (retryButton) {
-    retryButton.addEventListener('click', waitForBackendAndStart);
-  }
   waitForBackendAndStart();
 });
