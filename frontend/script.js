@@ -656,6 +656,7 @@ async function getMLPrediction(patientId = state.activePatientId) {
 
       patientState.lastPredictionAt = Date.now();
       patientState.predictionStatus = 'available';
+      patientState.lastPredictionError = '';
       updateSidebarPatientSnapshot(patientState);
 
       if (patientId === state.activePatientId) {
@@ -667,11 +668,13 @@ async function getMLPrediction(patientId = state.activePatientId) {
     } else {
       console.error('Prediction failed:', result.error || result);
       patientState.predictionStatus = 'unavailable';
+      patientState.lastPredictionError = result.error || 'Prediction response was not valid';
       return false;
     }
   } catch (error) {
     console.error('Error fetching prediction:', error);
     patientState.predictionStatus = 'unavailable';
+    patientState.lastPredictionError = error.message;
     return false;
   }
 }
@@ -715,6 +718,52 @@ function updateProbabilityDisplay() {
     document.getElementById('rfProb').textContent = state.mlProbabilities.rf.toFixed(3);
     document.getElementById('finalProb').textContent = state.mlProbabilities.final.toFixed(3);
   }
+}
+
+function setManualPredictionStatus(status, isBusy = false) {
+  const statusEl = document.getElementById('manualPredictionStatus');
+  const button = document.getElementById('manualPredictBtn');
+
+  if (statusEl) statusEl.textContent = status;
+  if (button) {
+    button.disabled = isBusy;
+    button.textContent = isBusy ? 'Sending to ML model...' : 'Get Real Prediction';
+  }
+}
+
+function renderManualPredictionResult(patientState) {
+  if (!patientState) return;
+
+  const riskEl = document.getElementById('manualResultRisk');
+  const logisticEl = document.getElementById('manualLogisticProb');
+  const rfEl = document.getElementById('manualRfProb');
+  const finalEl = document.getElementById('manualFinalProb');
+  const resultEl = document.getElementById('manualPredictionResult');
+
+  if (!riskEl || !logisticEl || !rfEl || !finalEl || !resultEl) return;
+
+  resultEl.classList.remove('stable', 'warning', 'critical', 'error');
+  const levelClass = patientState.riskLevel === 'CRITICAL'
+    ? 'critical'
+    : patientState.riskLevel === 'BORDERLINE'
+      ? 'warning'
+      : 'stable';
+  resultEl.classList.add(levelClass);
+
+  riskEl.textContent = `${Math.round(patientState.riskScore)}% ${patientState.riskLevel}`;
+  logisticEl.textContent = patientState.mlProbabilities.logistic ? patientState.mlProbabilities.logistic.toFixed(3) : '--';
+  rfEl.textContent = patientState.mlProbabilities.rf ? patientState.mlProbabilities.rf.toFixed(3) : '--';
+  finalEl.textContent = patientState.mlProbabilities.final ? patientState.mlProbabilities.final.toFixed(3) : '--';
+}
+
+function renderManualPredictionError(message) {
+  const resultEl = document.getElementById('manualPredictionResult');
+  const riskEl = document.getElementById('manualResultRisk');
+  if (!resultEl || !riskEl) return;
+
+  resultEl.classList.remove('stable', 'warning', 'critical');
+  resultEl.classList.add('error');
+  riskEl.textContent = message || 'Prediction failed. Backend is unavailable.';
 }
 
 // ========== INITIALIZATION ==========
@@ -1826,9 +1875,11 @@ function switchTab(tab) {
   document.getElementById('tab-' + tab).classList.add('active');
 }
 
-function applyManualInputs() {
+async function applyManualInputs() {
   const patientState = getActivePatientState();
   if (!patientState) return;
+  setManualPredictionStatus('Preparing input', true);
+
   patientState.vitals.heartRate = parseFloat(document.getElementById('inputHR').value);
   patientState.vitals.spO2 = parseFloat(document.getElementById('inputSpO2').value);
   patientState.vitals.systolicBP = parseFloat(document.getElementById('inputSBP').value);
@@ -1865,8 +1916,18 @@ function applyManualInputs() {
     `${state.additionalParams.oxygen_device.replace('_', ' ')} @ ${state.additionalParams.oxygen_flow}L/min`;
 
   calculateWaveformParameters();
-  getMLPrediction(patientState.id);
   updateUI();
+  setManualPredictionStatus('Requesting backend', true);
+  const ok = await getMLPrediction(patientState.id);
+  if (ok) {
+    setManualPredictionStatus('Prediction received');
+    renderManualPredictionResult(patientState);
+    renderPatientList();
+  } else {
+    setManualPredictionStatus('Backend unavailable');
+    renderManualPredictionError(patientState.lastPredictionError);
+  }
+  window.setTimeout(() => setManualPredictionStatus('Ready'), 2500);
 }
 
 function toggleVent() {

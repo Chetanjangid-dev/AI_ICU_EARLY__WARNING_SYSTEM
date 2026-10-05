@@ -330,12 +330,14 @@
 
         <!-- History Tab -->
         <div id="tab-history" class="tab-content">
-          <div class="panel">
-            <div class="panel-title">Vital Trends</div>
-            <canvas id="historyChart" height="200"></canvas>
-          </div>
-          <div class="input-panel">
-            <div class="panel-title">Manual Input (Send to ML Model)</div>
+          <div class="input-panel manual-prediction-panel">
+            <div class="manual-panel-header">
+              <div>
+                <div class="panel-title">Manual Prediction</div>
+                <div class="manual-panel-subtitle">Enter patient vitals and send them to the live ML backend.</div>
+              </div>
+              <div id="manualPredictionStatus" class="manual-status font-mono">Ready</div>
+            </div>
             <div class="input-grid" id="manualInputs">
               <!-- Basic Vitals -->
               <div class="input-item">
@@ -448,7 +450,22 @@
                 </select>
               </div>
             </div>
-            <button class="control-btn" style="margin-top: 12px; width: 100%;" onclick="applyManualInputs()">Apply Values & Get Prediction</button>
+            <button id="manualPredictBtn" class="control-btn manual-predict-btn" onclick="applyManualInputs()">Get Real Prediction</button>
+            <div id="manualPredictionResult" class="manual-result" aria-live="polite">
+              <div>
+                <div class="manual-result-label">Latest model output</div>
+                <div id="manualResultRisk" class="manual-result-risk font-mono">No manual prediction yet</div>
+              </div>
+              <div class="manual-result-metrics">
+                <span>Logistic <strong id="manualLogisticProb">--</strong></span>
+                <span>Random Forest <strong id="manualRfProb">--</strong></span>
+                <span>Final <strong id="manualFinalProb">--</strong></span>
+              </div>
+            </div>
+          </div>
+          <div class="panel history-trends-panel">
+            <div class="panel-title">Vital Trends</div>
+            <canvas id="historyChart" height="160"></canvas>
           </div>
         </div>
 
