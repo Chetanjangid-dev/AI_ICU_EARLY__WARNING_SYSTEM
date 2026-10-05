@@ -1,139 +1,105 @@
-# 🏥 AI ICU Early Warning System
+# AI ICU Early Warning System
 
-An AI-powered ICU monitoring and early warning system that analyzes patient vital signs and clinical parameters to estimate deterioration risk.
+An AI-powered ICU monitoring dashboard that simulates live patient vitals, sends clinical inputs to a machine-learning service, and displays deterioration risk predictions in a responsive web interface.
 
-The application uses a **Spring Boot backend** as the main web/API server and a separate **Python Flask ML microservice** for machine-learning inference using trained scikit-learn/joblib models.
+The project is built as a full-stack, multi-service system:
 
-## 🔗 Check It Out
+- Static frontend deployed on Vercel
+- Spring Boot backend deployed on Render
+- Python Flask ML inference service deployed on Render
+- Trained scikit-learn/joblib model artifacts for prediction
 
-### 🌐 Live Application
+---
+
+## Live Demo
+
+### Frontend
+
+https://aiicuearlywarningsystem-frontend.vercel.app/
+
+### Backend API
 
 https://ai-icu-backend.onrender.com
 
-### 🤖 ML Service
+### ML Service
 
 https://ai-icu-early-warning-system.onrender.com
 
-> The frontend is not deployed separately. It is bundled inside the Spring Boot backend and served directly by the backend.
+---
+
+## Features
+
+- ICU-style live monitoring dashboard
+- Multi-bed patient simulation
+- Animated vital and waveform-style displays
+- AI mortality/deterioration risk gauge
+- Manual vital input form for real backend predictions
+- Backend wake-up waiting screen for Render cold starts
+- Vercel API proxy for frontend-to-backend communication
+- Spring Boot backend API
+- Python Flask ML prediction service
+- Docker and Docker Compose support
+- Responsive layout for desktop and mobile
 
 ---
 
-# ✨ Features
-
-* 🏥 ICU patient monitoring dashboard
-* 📊 Real-time patient vital monitoring
-* 🤖 Machine-learning based deterioration prediction
-* 📈 Risk probability and prediction results
-* 👨‍⚕️ Multiple ICU bed monitoring
-* 🔄 Continuous vital-sign simulation
-* 🌐 Spring Boot REST API
-* 🐍 Dedicated Python ML inference service
-* 🐳 Docker support
-* ☁️ Production deployment on Render
-* 📡 Backend-to-ML-service communication over HTTP
-
----
-
-# 🏗️ Architecture
-
-The project is divided into two independently deployable services.
+## Architecture
 
 ```text
-                    ┌──────────────────────────┐
-                    │        Browser           │
-                    │   ICU Monitoring UI      │
-                    └────────────┬─────────────┘
-                                 │
-                                 │ HTTP
-                                 ▼
-              ┌────────────────────────────────────┐
-              │       Spring Boot Backend           │
-              │                                    │
-              │  Serves HTML/CSS/JS                │
-              │  REST API                          │
-              │  MainController                    │
-              └────────────────┬───────────────────┘
-                               │
-                               │ POST /predict
-                               ▼
-              ┌────────────────────────────────────┐
-              │      Python ML Microservice        │
-              │           Flask                    │
-              │                                    │
-              │  Loads trained ML models           │
-              │  Performs prediction               │
-              └────────────────┬───────────────────┘
-                               │
-                               ▼
-                 ┌─────────────────────────┐
-                 │ scikit-learn / joblib   │
-                 │ trained model artifacts  │
-                 └─────────────────────────┘
+Browser
+  |
+  | Loads frontend
+  v
+Vercel Frontend
+  |
+  | /api/health
+  | /api/predict
+  v
+Vercel Serverless API Proxy
+  |
+  | GET /health
+  | POST /predict
+  v
+Render Spring Boot Backend
+  |
+  | POST /predict
+  v
+Render Python Flask ML Service
+  |
+  v
+scikit-learn / joblib models
 ```
+
+The browser talks to the Vercel frontend and same-origin Vercel API routes. Those API routes call the Render backend. The Spring Boot backend then forwards prediction requests to the Python ML service.
+
+This keeps browser-side networking simple and avoids CORS issues.
 
 ---
 
-# ☁️ Production Deployment
-
-Both services are deployed separately on Render:
-
-```text
-┌───────────────────────┐
-│   Render Web Service  │
-│                       │
-│   Spring Boot Backend │
-│                       │
-│  Frontend + REST API  │
-└───────────┬───────────┘
-            │
-            │ ML_SERVICE_URL
-            │ HTTP POST /predict
-            ▼
-┌───────────────────────┐
-│   Render Web Service  │
-│                       │
-│   Python ML Service   │
-│       Flask           │
-└───────────────────────┘
-```
-
-The backend receives the ML service URL through:
-
-```text
-ML_SERVICE_URL
-```
-
-This keeps the backend independent of the ML service's deployment URL.
-
----
-
-# 📂 Project Structure
+## Project Structure
 
 ```text
 AI_ICU_EARLY__WARNING_SYSTEM/
-│
+|
+├── frontend/
+│   ├── index.html
+│   ├── style.css
+│   ├── script.js
+│   └── api/
+│       ├── health.js
+│       └── predict.js
+|
 ├── backend/
-│   ├── src/
-│   │   └── main/
-│   │       ├── java/
-│   │       │   └── com/icu/earlywarning/
-│   │       │       ├── Application.java
-│   │       │       └── MainController.java
-│   │       │
-│   │       └── resources/
-│   │           ├── static/
-│   │           │   ├── style.css
-│   │           │   └── script.js
-│   │           │
-│   │           ├── templates/
-│   │           │   └── index.html
-│   │           │
-│   │           └── application.properties
-│   │
+│   ├── src/main/java/com/icu/earlywarning/
+│   │   ├── Application.java
+│   │   └── MainController.java
+│   ├── src/main/resources/
+│   │   ├── application.properties
+│   │   ├── static/
+│   │   └── templates/
 │   ├── pom.xml
-│   ├── Dockerfile
-│   └── target/
-│
+│   └── Dockerfile
+|
 ├── ml_service/
 │   ├── app.py
 │   ├── predict.py
@@ -143,84 +109,70 @@ AI_ICU_EARLY__WARNING_SYSTEM/
 │   ├── scaler.pkl
 │   ├── feature_columns.pkl
 │   └── admission_map.pkl
-│
+|
 ├── docker-compose.yml
 ├── .gitignore
-└── README.md
+└── Readme.md
 ```
 
 ---
 
-# 🧩 Understanding the Main Folders
+## Main Components
 
-## `backend/`
+### Frontend
 
-This is the **main Spring Boot application**.
+The `frontend/` folder contains the Vercel-deployed dashboard.
 
-It is responsible for:
+It includes:
 
-* Serving the frontend
-* Handling browser requests
-* Providing REST APIs
-* Sending prediction requests to the Python ML service
-* Returning ML predictions to the browser
+- ICU monitoring UI
+- Waiting screen while the backend wakes up
+- Manual input workflow
+- Mobile responsive dashboard layout
+- Vercel API routes for backend proxying
 
-### `src/main/java`
-
-Contains the Java/Spring Boot backend code.
+The frontend calls:
 
 ```text
-src
-└── main
-    └── java
-        └── backend Java code
+GET  /api/health
+POST /api/predict
 ```
 
-### `src/main/resources`
-
-Contains application resources.
-
-The frontend is bundled inside Spring Boot:
+These routes are implemented inside:
 
 ```text
-resources/
-├── static/
-│   ├── style.css
-│   └── script.js
-│
-└── templates/
-    └── index.html
+frontend/api/
 ```
 
-Spring Boot uses:
+### Spring Boot Backend
 
-* `templates/` → HTML templates
-* `static/` → CSS, JavaScript, and other static files
+The `backend/` folder contains the main Java API service.
 
-Therefore, there is **no separate frontend deployment**.
+It provides:
 
----
+- `GET /health`
+- `POST /predict`
+- Backend-to-ML-service communication
+- Optional bundled Spring Boot static/template frontend resources
 
-# 🐍 `ml_service/`
+The backend reads the ML service URL from:
 
-This is the Python Flask microservice responsible only for machine-learning inference.
+```text
+ML_SERVICE_URL
+```
+
+### ML Service
+
+The `ml_service/` folder contains the Python Flask inference service.
 
 It:
 
-1. Receives patient data
-2. Loads the trained models
-3. Performs prediction
-4. Returns the prediction as JSON
+1. Receives patient vitals and clinical values
+2. Builds the model feature set
+3. Loads the trained model artifacts
+4. Returns prediction probabilities and final risk output
 
-### `app.py`
-
-Flask API server.
-
-### `predict.py`
-
-Contains prediction and model inference logic.
-
-The service exposes:
+The ML service exposes:
 
 ```text
 GET  /health
@@ -229,9 +181,183 @@ POST /predict
 
 ---
 
-# 🤖 ML Models
+## Prediction Flow
 
-The Python service uses trained scikit-learn/joblib model artifacts:
+```text
+User enters vitals
+  |
+  v
+Frontend Manual Input form
+  |
+  v
+Vercel /api/predict
+  |
+  v
+Spring Boot /predict
+  |
+  v
+Flask ML Service /predict
+  |
+  v
+ML model prediction
+  |
+  v
+Dashboard risk update
+```
+
+Example prediction response:
+
+```json
+{
+  "success": true,
+  "prediction": {
+    "logistic_prob": 1.0,
+    "rf_prob": 0.01993940605284524,
+    "final_prob": 0.39743183180945085,
+    "final_pred": 1
+  }
+}
+```
+
+---
+
+## Running Locally
+
+### 1. Start the ML Service
+
+```bash
+cd ml_service
+python -m pip install -r requirements.txt
+python app.py
+```
+
+Default local URL:
+
+```text
+http://localhost:5001
+```
+
+### 2. Start the Spring Boot Backend
+
+```bash
+cd backend
+mvn clean package
+java -jar target/early-warning-system-0.0.1-SNAPSHOT.jar
+```
+
+Default local URL:
+
+```text
+http://localhost:7860
+```
+
+### 3. Run the Frontend
+
+For the Vercel-style frontend, run the `frontend/` folder with Vercel tooling:
+
+```bash
+cd frontend
+vercel dev
+```
+
+The frontend needs its API routes because `/api/health` and `/api/predict` proxy requests to the backend.
+
+---
+
+## Docker Compose
+
+The project also includes a root-level Docker Compose file:
+
+```bash
+docker compose up --build
+```
+
+This is useful for running the backend and ML service together during local development.
+
+---
+
+## Deployment
+
+### Frontend on Vercel
+
+```text
+Root Directory:
+frontend/
+```
+
+The frontend includes serverless API routes:
+
+```text
+frontend/api/health.js
+frontend/api/predict.js
+```
+
+These routes use:
+
+```text
+BACKEND_URL=https://ai-icu-backend.onrender.com
+```
+
+If `BACKEND_URL` is not configured, the frontend API routes default to the deployed Render backend URL.
+
+### Backend on Render
+
+```text
+Root Directory:
+backend/
+
+Environment:
+Docker / Java Spring Boot
+```
+
+Required environment variable:
+
+```text
+ML_SERVICE_URL=https://ai-icu-early-warning-system.onrender.com
+```
+
+### ML Service on Render
+
+```text
+Root Directory:
+ml_service/
+
+Build Command:
+pip install -r requirements.txt
+
+Start Command:
+python app.py
+```
+
+---
+
+## Environment Variables
+
+### Frontend API Routes
+
+```text
+BACKEND_URL
+```
+
+### Spring Boot Backend
+
+```text
+PORT
+ML_SERVICE_URL
+```
+
+### Local defaults
+
+```properties
+server.port=${PORT:7860}
+ml.service.url=${ML_SERVICE_URL:http://localhost:5001}
+```
+
+---
+
+## ML Model Files
+
+The ML service requires these files at runtime:
 
 ```text
 logistic_model.pkl
@@ -241,104 +367,19 @@ feature_columns.pkl
 admission_map.pkl
 ```
 
-These files are required at runtime by the ML service.
-
-They must therefore be committed to GitHub and must not be excluded by `.gitignore`.
+They should remain committed to the repository because the deployed ML service loads them when it starts.
 
 ---
 
-# 🔄 Request Flow
+## API Reference
 
-## 1. Dashboard Loading
+### Backend Health
 
-```text
-Browser
-   │
-   │ GET /
-   ▼
-Spring Boot
-   │
-   ▼
-MainController
-   │
-   ▼
-templates/index.html
-   │
-   ▼
-Browser
+```http
+GET /health
 ```
 
-CSS and JavaScript are served from:
-
-```text
-static/
-```
-
----
-
-## 2. Prediction Flow
-
-When the dashboard submits patient vitals:
-
-```text
-Browser
-   │
-   │ POST /predict
-   │
-   │ JSON patient vitals
-   ▼
-MainController.predict()
-   │
-   │ forwards JSON
-   ▼
-Python Flask ML Service
-   │
-   │ POST /predict
-   ▼
-predict.py
-   │
-   ├── Loads models
-   ├── Processes features
-   └── Generates prediction
-   │
-   ▼
-Python ML Service
-   │
-   │ JSON response
-   ▼
-Spring Boot
-   │
-   │ returns response
-   ▼
-Browser
-   │
-   ▼
-Dashboard updates
-```
-
-The browser does **not** directly communicate with the Python ML service.
-
-This keeps the architecture simple:
-
-```text
-Browser → Spring Boot → ML Service
-```
-
----
-
-# 🚀 API
-
-## `GET /`
-
-Serves the ICU dashboard.
-
----
-
-## `GET /health`
-
-Health check endpoint.
-
-Example response:
+Example:
 
 ```json
 {
@@ -346,19 +387,13 @@ Example response:
 }
 ```
 
-The deployed ML service can be checked at:
+### Backend Prediction
 
-```text
-https://ai-icu-early-warning-system.onrender.com/health
+```http
+POST /predict
 ```
 
----
-
-## `POST /predict`
-
-Receives patient clinical data and returns the ML prediction.
-
-### Example Request
+Example request:
 
 ```json
 {
@@ -386,456 +421,60 @@ Receives patient clinical data and returns the ML prediction.
 }
 ```
 
-### Example Response
+---
 
-```json
-{
-  "success": true,
-  "prediction": {
-    "logistic_prob": 1.0,
-    "rf_prob": 0.01993940605284524,
-    "final_prob": 0.39743183180945085,
-    "final_pred": 1
-  }
-}
-```
+## Notes on Render Cold Starts
+
+Render services may sleep after inactivity depending on the hosting plan. The frontend includes a waiting screen that checks the backend on a controlled schedule and opens the dashboard once the backend is ready.
+
+This improves the first-load experience when the backend is waking up.
 
 ---
 
-# ⚙️ Configuration
-
-Spring Boot reads the following environment variables:
-
-```text
-SERVER_PORT
-ML_SERVICE_URL
-```
-
-Default values for local development:
-
-```properties
-server.port=${SERVER_PORT:7860}
-ml.service.url=${ML_SERVICE_URL:http://localhost:5001}
-```
-
-## Production
-
-On Render, the backend uses the port provided by Render through:
-
-```text
-SERVER_PORT
-```
-
-The ML service URL is configured using:
-
-```text
-ML_SERVICE_URL=https://ai-icu-early-warning-system.onrender.com
-```
-
-The actual Render port is injected automatically by the platform.
-
----
-
-# 🐳 Docker
-
-Both major services have their own Docker configuration.
-
-```text
-backend/
-└── Dockerfile
-
-ml_service/
-└── Dockerfile
-```
-
-Each Dockerfile describes how that particular service is packaged into a container.
-
----
-
-# 🐳 Docker Compose
-
-The root-level:
-
-```text
-docker-compose.yml
-```
-
-is used to run the services together during local development.
-
-Conceptually:
-
-```text
-docker-compose.yml
-       │
-       ├── Backend container
-       │
-       └── ML service container
-```
-
-Docker Compose is mainly useful for running the complete multi-service application locally.
-
-The Render deployment uses the two services independently.
-
----
-
-# 🛠️ Run Locally
-
-## 1. Install Python dependencies
-
-```bash
-python -m pip install -r ml_service\requirements.txt
-```
-
-## 2. Start ML service
-
-```bash
-python ml_service\app.py
-```
-
-The ML service will run on:
-
-```text
-http://localhost:5001
-```
-
-## 3. Start Spring Boot
-
-In another terminal:
-
-```bash
-cd backend
-mvn clean package
-java -jar target\early-warning-system-0.0.1-SNAPSHOT.jar
-```
-
-Open:
-
-```text
-http://localhost:7860
-```
-
----
-
-# 🐳 Run With Docker Compose
-
-```bash
-docker compose up --build
-```
-
-Then open:
-
-```text
-http://localhost:7860
-```
-
----
-
-# 📦 Maven `target/` Folder
-
-The `target/` folder is generated by Maven during the build process.
-
-For example:
-
-```bash
-mvn clean package
-```
-
-Maven uses:
-
-```text
-pom.xml
-```
-
-to understand the project's dependencies and build configuration.
-
-It then compiles the Java source code and generates the deployable JAR inside:
-
-```text
-target/
-```
-
-The `target/` directory does not need to be manually maintained.
-
-It can generally be ignored by Git because it can be regenerated using Maven.
-
----
-
-# 📄 `pom.xml`
-
-`pom.xml` is the Maven project configuration file.
-
-It defines:
-
-* Project information
-* Java version
-* Spring Boot version
-* Dependencies
-* Build plugins
-* Resource configuration
-
-For example, the project uses:
-
-```text
-Spring Boot
-Spring Web
-Thymeleaf
-Spring Validation
-```
-
----
-
-# 🔐 `.gitignore`
-
-`.gitignore` tells Git which files and folders should not be committed to the repository.
-
-Typical generated files such as:
-
-```text
-target/
-```
-
-can be ignored because Maven can recreate them.
-
-However, the ML model files inside `ml_service/` must remain available because the ML service needs them at runtime.
-
----
-
-# 🚀 Deployment
-
-The production application is deployed as **two independent Render Web Services**.
-
-## Service 1 — ML Service
-
-```text
-Repository:
-AI_ICU_EARLY__WARNING_SYSTEM
-
-Root Directory:
-ml_service/
-
-Environment:
-Python
-
-Build Command:
-pip install -r requirements.txt
-
-Start Command:
-python app.py
-```
-
-### Live ML Service
-
-```text
-https://ai-icu-early-warning-system.onrender.com
-```
-
-### Health Check
-
-```text
-https://ai-icu-early-warning-system.onrender.com/health
-```
-
----
-
-## Service 2 — Spring Boot Backend
-
-```text
-Repository:
-AI_ICU_EARLY__WARNING_SYSTEM
-
-Root Directory:
-backend/
-
-Environment:
-Docker
-```
-
-The backend receives the ML service URL through:
-
-```text
-ML_SERVICE_URL
-```
-
-Production configuration:
-
-```text
-ML_SERVICE_URL=https://ai-icu-early-warning-system.onrender.com
-```
-
-### Live Application
-
-```text
-https://ai-icu-backend.onrender.com
-```
-
----
-
-# 🌐 Production Architecture
-
-```text
-                         INTERNET
-                            │
-                            ▼
-              ┌──────────────────────────┐
-              │     Render Backend       │
-              │                          │
-              │     Spring Boot          │
-              │                          │
-              │  HTML + CSS + JS         │
-              │  REST API                │
-              └────────────┬─────────────┘
-                           │
-                           │ HTTP /predict
-                           ▼
-              ┌──────────────────────────┐
-              │     Render ML Service    │
-              │                          │
-              │       Flask              │
-              │                          │
-              │  scikit-learn models     │
-              │  joblib artifacts        │
-              └──────────────────────────┘
-```
-
----
-
-# ▶️ Application Startup Flow
-
-When the Spring Boot application starts:
-
-```text
-java -jar early-warning-system-0.0.1-SNAPSHOT.jar
-             ↓
-Application.java
-             ↓
-SpringApplication.run(...)
-             ↓
-Spring Boot loads application.properties
-             ↓
-MainController is discovered
-             ↓
-Embedded Tomcat starts
-             ↓
-Application starts listening for HTTP requests
-```
-
-The port is controlled through:
-
-```text
-SERVER_PORT
-```
-
-and on Render the platform provides the required port.
-
----
-
-# ⚠️ Important Deployment Notes
-
-### ML service must be available first
-
-The backend depends on the Python ML service for predictions.
-
-Therefore:
-
-```text
-ML Service
-    ↓
-Backend
-```
-
-The backend must have the correct:
-
-```text
-ML_SERVICE_URL
-```
-
-configured.
-
-### Render cold starts
-
-On hosting plans where services sleep during inactivity, the first request after inactivity can take noticeably longer while the service starts again.
-
-This can make the first prediction appear slow even though the application is working normally.
-
-### Model files
-
-The following files are required by the ML service:
-
-```text
-logistic_model.pkl
-random_forest_model.pkl
-scaler.pkl
-feature_columns.pkl
-admission_map.pkl
-```
-
-Make sure they are committed to GitHub and are not accidentally excluded by `.gitignore`.
-
----
-
-# 🧰 Technology Stack
+## Technology Stack
 
 ### Frontend
 
-* HTML
-* CSS
-* JavaScript
+- HTML
+- CSS
+- JavaScript
+- Vercel Serverless Functions
 
 ### Backend
 
-* Java
-* Spring Boot
-* Spring Web
-* Thymeleaf
-* Maven
+- Java
+- Spring Boot
+- Spring Web
+- Thymeleaf
+- Maven
 
 ### Machine Learning
 
-* Python
-* Flask
-* NumPy
-* Pandas
-* scikit-learn
-* Joblib
+- Python
+- Flask
+- NumPy
+- Pandas
+- scikit-learn
+- Joblib
 
 ### Deployment
 
-* Docker
-* Docker Compose
-* Render
-* GitHub
+- Vercel
+- Render
+- Docker
+- Docker Compose
+- GitHub
 
 ---
 
-# 🔮 Future Improvements
+## Project Highlights
 
-Potential future improvements include:
+This project demonstrates a practical multi-service AI application architecture:
 
-* More realistic patient vital-sign simulation
-* Persistent patient/bed state
-* Improved temporal risk modeling
-* LSTM/time-series based deterioration prediction
-* Explainable AI visualizations
-* Historical patient trend charts
-* Authentication and role-based access
-* Database integration
-* WebSocket-based real-time updates
-* Production-grade WSGI server for the ML service
-* Monitoring and logging
-
----
-
-# 👨‍💻 Project Highlights
-
-This project demonstrates a **multi-service AI application architecture** where a Java Spring Boot application acts as the main backend and a Python Flask service handles machine-learning inference.
-
-The system also demonstrates:
-
-* REST API integration between Java and Python
-* ML model serving
-* Frontend integration with Spring Boot
-* Docker-based deployment
-* Environment-based configuration
-* Independent service deployment
-* Production deployment using Render
-* Separation of application and ML responsibilities
+- A responsive frontend for ICU monitoring
+- A Spring Boot backend for API orchestration
+- A Python ML microservice for inference
+- Real prediction flow from manual clinical input
+- Separate deployments for frontend, backend, and ML service
+- Production-friendly environment variable configuration
+- Improved user experience around hosted-service cold starts
